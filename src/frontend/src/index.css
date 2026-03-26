@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "BricolageGrotesque";
+  src: url("/assets/fonts/BricolageGrotesque.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PlusJakartaSans";
+  src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+@layer base {
+  /* ===== LIGHT MODE (default) ===== */
+  :root {
+    --radius: 0.75rem;
+    --background: 1 0 0;
+    --foreground: 0.16 0.02 250;
+    --card: 1 0 0;
+    --card-foreground: 0.16 0.02 250;
+    --popover: 1 0 0;
+    --popover-foreground: 0.16 0.02 250;
+    --primary: 0.67 0.17 220;
+    --primary-foreground: 1 0 0;
+    --secondary: 0.96 0.005 250;
+    --secondary-foreground: 0.16 0.02 250;
+    --muted: 0.98 0.003 250;
+    --muted-foreground: 0.53 0.03 245;
+    --accent: 0.95 0.04 220;
+    --accent-foreground: 0.55 0.14 225;
+    --destructive: 0.58 0.22 25;
+    --destructive-foreground: 1 0 0;
+    --border: 0.91 0.008 250;
+    --input: 0.91 0.008 250;
+    --ring: 0.67 0.17 220;
+    --chart-1: 0.67 0.17 220;
+    --chart-2: 0.72 0.14 200;
+    --chart-3: 0.58 0.22 25;
+    --chart-4: 0.68 0.18 280;
+    --chart-5: 0.76 0.15 140;
+    --sidebar: 0.97 0.005 250;
+    --sidebar-foreground: 0.16 0.02 250;
+    --sidebar-primary: 0.67 0.17 220;
+    --sidebar-primary-foreground: 1 0 0;
+    --sidebar-accent: 0.95 0.04 220;
+    --sidebar-accent-foreground: 0.55 0.14 225;
+    --sidebar-border: 0.91 0.008 250;
+    --sidebar-ring: 0.67 0.17 220;
+    --brand-blue: 0.67 0.17 220;
+    --brand-cyan: 0.72 0.14 200;
+    --teal: 0.67 0.17 220;
+    --orange: 0.72 0.16 45;
+    --icon-bg: 0.94 0.04 220;
+    --card-border: 0.91 0.008 250;
+  }
+
+  /* ===== DARK MODE ===== */
+  .dark {
+    --background: 0.12 0.02 240;
+    --foreground: 0.94 0.01 228;
+    --card: 0.15 0.025 232;
+    --card-foreground: 0.94 0.01 228;
+    --popover: 0.15 0.025 232;
+    --popover-foreground: 0.94 0.01 228;
+    --primary: 0.67 0.17 220;
+    --primary-foreground: 0.12 0.02 240;
+    --secondary: 0.74 0.14 55;
+    --secondary-foreground: 0.12 0.02 240;
+    --muted: 0.19 0.03 232;
+    --muted-foreground: 0.72 0.02 225;
+    --accent: 0.18 0.05 180;
+    --accent-foreground: 0.67 0.17 220;
+    --destructive: 0.62 0.22 25;
+    --destructive-foreground: 0.985 0 0;
+    --border: 0.24 0.04 232;
+    --input: 0.24 0.04 232;
+    --ring: 0.67 0.17 220;
+    --chart-1: 0.67 0.17 220;
+    --chart-2: 0.74 0.14 55;
+    --chart-3: 0.62 0.22 25;
+    --chart-4: 0.68 0.18 280;
+    --chart-5: 0.76 0.15 140;
+    --sidebar: 0.13 0.025 235;
+    --sidebar-foreground: 0.94 0.01 228;
+    --sidebar-primary: 0.67 0.17 220;
+    --sidebar-primary-foreground: 0.12 0.02 240;
+    --sidebar-accent: 0.18 0.04 232;
+    --sidebar-accent-foreground: 0.94 0.01 228;
+    --sidebar-border: 0.24 0.04 232;
+    --sidebar-ring: 0.67 0.17 220;
+    --brand-blue: 0.67 0.17 220;
+    --brand-cyan: 0.72 0.14 200;
+    --teal: 0.74 0.12 186;
+    --orange: 0.74 0.14 55;
+    --icon-bg: 0.18 0.05 180;
+    --card-border: 0.24 0.04 232;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "PlusJakartaSans", system-ui, sans-serif;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "BricolageGrotesque", system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-teal {
+    color: oklch(var(--teal));
+  }
+  .bg-teal {
+    background-color: oklch(var(--teal));
+  }
+  .text-orange {
+    color: oklch(var(--orange));
+  }
+  .bg-orange {
+    background-color: oklch(var(--orange));
+  }
+  .text-brand {
+    color: oklch(var(--brand-blue));
+  }
+  .bg-brand {
+    background-color: oklch(var(--brand-blue));
+  }
+  .bg-icon {
+    background-color: oklch(var(--icon-bg));
+  }
+  .border-card {
+    border-color: oklch(var(--card-border));
+  }
+  .gradient-bg {
+    background: #ffffff;
+  }
+  .dark .gradient-bg {
+    background: linear-gradient(
+      135deg,
+      oklch(0.12 0.02 240) 0%,
+      oklch(0.09 0.03 220) 100%
+    );
+  }
+  .card-surface {
+    background-color: oklch(var(--card));
+    border: 1px solid oklch(var(--border));
+  }
+  .glow-teal {
+    box-shadow: 0 0 20px oklch(var(--teal) / 0.15);
+  }
+  .glow-teal-sm {
+    box-shadow: 0 0 8px oklch(var(--teal) / 0.25);
+  }
+}
