@@ -9,11 +9,15 @@ import { Input } from "@/components/ui/input";
 import {
   type PlacementTransaction,
   type Requirement,
-  getPlacementsByRequirement,
   getRequirements,
   updatePlacementStatus,
 } from "@/lib/db";
 import { calculateMatchScore, inferSeniority } from "@/lib/matching";
+import {
+  getSubmissionsForRequirement,
+  subscribeToRequirementSubmissions,
+  updateSubmissionStatusDB,
+} from "@/lib/submissionsDb";
 import { getTrainingRecommendation } from "@/lib/training";
 import { Link, useParams } from "@tanstack/react-router";
 import { Briefcase, DollarSign, MapPin } from "lucide-react";
@@ -92,8 +96,20 @@ export function RequirementDetailPage() {
     loadPlacements();
   }, [reqId]);
 
+  // Real-time subscription
+  useEffect(() => {
+    if (!reqId) return;
+    const unsubscribe = subscribeToRequirementSubmissions(reqId, (subs) => {
+      // Map Submission[] to PlacementTransaction[] shape for the kanban
+      setPlacements(subs as unknown as PlacementTransaction[]);
+    });
+    return unsubscribe;
+  }, [reqId]);
+
   const loadPlacements = () =>
-    getPlacementsByRequirement(reqId).then(setPlacements);
+    getSubmissionsForRequirement(reqId).then((subs) =>
+      setPlacements(subs as unknown as PlacementTransaction[]),
+    );
 
   const handleAction = async (
     placement: PlacementTransaction,
@@ -103,7 +119,10 @@ export function RequirementDetailPage() {
       setJoinModal({ open: true, placementId: placement.id });
       return;
     }
-    await updatePlacementStatus(placement.id, nextStage);
+    await updateSubmissionStatusDB(
+      placement.id,
+      nextStage as PlacementTransaction["status"],
+    );
     toast.success(`Candidate moved to ${nextStage.replace("_", " ")}`);
     loadPlacements();
   };
@@ -121,6 +140,9 @@ export function RequirementDetailPage() {
     const total = Number(budget);
     const yourCommission = Math.round(total * 0.15);
     const vendorPayout = total - yourCommission;
+    // Update in Supabase submissions table
+    await updateSubmissionStatusDB(joinModal.placementId, "joined");
+    // Also update local placement record if it exists
     await updatePlacementStatus(joinModal.placementId, "joined", {
       total_budget: total,
       your_commission: yourCommission,

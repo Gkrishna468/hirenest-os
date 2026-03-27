@@ -1,61 +1,50 @@
-# HireNest OS — V9: Role-Based Nav, Gap Notifications & Training Recommendations
+# HireNest OS — Submission Workflow Persistence (Phase 1 Last Mile)
 
 ## Current State
-- Navbar shows all links to every user (AI Match, Talent Bench, Requirements, Deal Room, Pricing, Verify, Revenue)
-- No role-based access control in routing — anyone can navigate to /admin/verification or /admin/revenue by typing the URL
-- Login page stores selected role in local component state but doesn't persist it globally
-- AI Match page shows skill gap chips (green ✓ matched, red ✗ missing) but no action for partially matching candidates
-- No "Recommended Training" attached to missing skill chips
-- No client spending page or vendor earnings page (separate from dashboard)
-- Matching behavior: all candidates shown ranked by score — CORRECT. Gaps are highlighted — CORRECT. No gap-based notification workflow.
+
+- `lib/db.ts` contains all data as in-memory mock arrays (MOCK_SUBMISSIONS, MOCK_PLACEMENTS, etc.)
+- `lib/planEnforcement.ts` tracks monthly submission counts in localStorage
+- `lib/supabase.ts` has a Supabase client (conditionally initialized if env vars set) and a full `SUPABASE_SCHEMA` SQL string but the schema does NOT include `placement_transactions` (only `submissions`)
+- `SubmitCandidateModal.tsx` uses hardcoded MOCK_CANDIDATES and calls a no-op toast on submit
+- `RecruiterDashboard.tsx` uses `getRequirements()` + `getSubmissions()` from mock db
+- `RequirementDetailPage.tsx` uses `getPlacementsByRequirement()` + `updatePlacementStatus()` from mock db
+- `VendorDashboard.tsx` uses `getCandidates()` + `getSubmissions()` from mock db
+- No real-time subscriptions exist anywhere
+- Status transitions happen only in memory and are lost on page refresh
 
 ## Requested Changes (Diff)
 
 ### Add
-- `lib/navigation.ts` — `navigationByRole` config mapping admin/client/vendor/recruiter to their allowed nav links
-- `lib/roleStore.ts` — simple localStorage-backed role store (`getCurrentRole`, `setCurrentRole`, `clearRole`)
-- `/client/spending` page — KPI cards (Total Spent, Active Hires, Pending Payments) + Spending by Requirement table (mock data)
-- `/vendor/earnings` page — KPI cards (Total Earned, Pending Payout, This Month) + Earnings by Placement table (mock data)
-- `GapConnectModal` component — shown when a candidate score is 80-99%. Two-side flow:
-  - **Client view**: "A candidate matches your requirement but is missing [skills]. Request them to update their CV?" → sends anonymous request
-  - **Vendor view**: "Your candidate partially matches a requirement. Missing: [skills]. Recommended training shown. Would you like to update their CV?"
-  - Client company name hidden from vendor; vendor name/company hidden from client
-- `RecommendedTraining` map in `lib/training.ts` — maps common skill names to recommended courses:
-  - AWS → "AWS Certified Solutions Architect – Associate"
-  - React → "React – The Complete Guide (Udemy)"
-  - TypeScript → "TypeScript: The Complete Developer's Guide"
-  - Kubernetes → "Kubernetes for Developers (Linux Foundation)"
-  - Python → "Python Bootcamp – Zero to Hero"
-  - TensorFlow → "TensorFlow Developer Certificate"
-  - etc.
-- Missing skill chips on CandidateCard and AIMatchPage now show a tooltip or inline recommendation: "Missing AWS → AWS Certified Solutions Architect"
-- `AccessDenied` component — shown when a non-admin user navigates to /admin/* routes directly
+- `lib/submissionsDb.ts` — Supabase-first data layer for submissions/placements. Wraps all submission CRUD with Supabase calls, falls back to mock if Supabase is not connected. Exposes:
+  - `getSubmissionsForRequirement(reqId)` — query submissions table
+  - `getSubmissionsForVendor(vendorId)` — query by vendor_id
+  - `createSubmission(data)` — insert into submissions, calculate match score
+  - `updateSubmissionStatus(id, status)` — update status field
+  - `getMonthlySubmissionCount(vendorId)` — count for plan enforcement
+  - `subscribeToSubmissions(reqId, callback)` — Supabase realtime channel
+- `SUPABASE_SCHEMA` in `supabase.ts`: extend to include `placement_transactions` table with all required fields (vendor_id, status enum with offer_extended/joined, total_budget, commission, payout, payment statuses)
+- SQL migration comment block at top of schema string showing the full updated schema
+- Status transition dropdown in `RecruiterDashboard.tsx` — per-submission `<select>` that calls `updateSubmissionStatus()` and reflects in real time
+- Vendor submission progress bar: in `VendorDashboard.tsx`, per-submission pipeline progress bar showing the 5 stages (submitted → shortlisted → interview → offer_extended → joined)
+- Plan enforcement updated to use `getMonthlySubmissionCount()` from Supabase when connected
 
 ### Modify
-- `Navbar.tsx` — reads `getCurrentRole()` from roleStore. If role is set, renders role-specific nav links from `navigationByRole`. If no role (public/landing), shows original public links. Adds role badge next to logo when logged in.
-- `LoginPage.tsx` — on successful login, calls `setCurrentRole(role)` to persist role in localStorage
-- `App.tsx`:
-  - Add routes for `/client/spending` and `/vendor/earnings`
-  - Admin routes (`/admin/verification`, `/admin/revenue`) wrapped to check role: non-admin gets AccessDenied page instead of passphrase prompt (or in addition to it)
-- `AIMatchPage.tsx` — for candidates with score 80-99%: show an amber "Gap Connect" button that opens GapConnectModal. Confirmed gap connection adds a toast notification.
-- `CandidateCard.tsx` — missing skill chips show recommended training as a small tooltip text below: "→ AWS Certified Solutions Architect"
-- `RequirementDetailPage.tsx` — submitted candidates in pipeline with 80-99% score get a "Request CV Update" chip action in their pipeline card
+- `SubmitCandidateModal.tsx` — wire `handleSubmit` to call `createSubmission()` from `submissionsDb.ts`, load real candidates from vendor's bench via `getCandidates({ vendorId })`, show plan limit UI (usage badge + block at limit)
+- `RecruiterDashboard.tsx` — use `getSubmissionsForRequirement()` + `subscribeToSubmissions()` for real-time updates; add status dropdown (submitted/shortlisted/interview/offer_extended/joined/rejected) per candidate row
+- `RequirementDetailPage.tsx` — use `getSubmissionsForRequirement()` and `updateSubmissionStatus()` from submissionsDb; subscribe to real-time updates so kanban updates without refresh
+- `VendorDashboard.tsx` — use `getSubmissionsForVendor()` to load submission list; show 5-step progress bar per submission showing current stage; show plan usage from Supabase count
+- `lib/planEnforcement.ts` — `getPlanStatus()` accepts an optional async `getCountFn` so when Supabase is connected it queries the count; otherwise falls back to localStorage
 
 ### Remove
-- Nothing removed; admin pages remain accessible for admin role, just blocked for non-admins
+- Nothing removed — mock data stays as fallback when Supabase env vars are absent
 
 ## Implementation Plan
 
-1. Create `src/lib/roleStore.ts` — `getCurrentRole()`, `setCurrentRole(role)`, `clearRole()` using localStorage
-2. Create `src/lib/navigation.ts` — `navigationByRole` config (admin / client / vendor / recruiter)
-3. Create `src/lib/training.ts` — `TRAINING_RECOMMENDATIONS` map (skill → course name + URL placeholder)
-4. Update `LoginPage.tsx` — call `setCurrentRole(selectedRole)` on login submit; also add Admin option (uses passphrase `hirenest2026` to set role to 'admin')
-5. Update `Navbar.tsx` — read role from roleStore; render role-specific nav items; show role badge; logout clears role
-6. Create `AccessDenied.tsx` — simple locked page component with back button
-7. Update `App.tsx` — add /client/spending and /vendor/earnings routes; wrap admin routes with role check
-8. Create `ClientSpendingPage.tsx` — spending KPIs + table
-9. Create `VendorEarningsPage.tsx` — earnings KPIs + table
-10. Create `GapConnectModal.tsx` — two-sided anonymous gap workflow modal
-11. Update `AIMatchPage.tsx` — add "Gap Connect" button for 80-99% candidates; add training tooltip to missing chips
-12. Update `CandidateCard.tsx` — add recommended training annotation to missing skill chips
-13. Update `RequirementDetailPage.tsx` — "Request CV Update" action for gap candidates in pipeline
+1. Extend `SUPABASE_SCHEMA` in `supabase.ts` to add `placement_transactions` table with full status enum and financial fields
+2. Create `lib/submissionsDb.ts` with Supabase-first CRUD + real-time subscription helper + mock fallback
+3. Update `lib/planEnforcement.ts` to accept async count function for Supabase-backed limit check
+4. Update `SubmitCandidateModal.tsx`: load real vendor candidates, wire submission to submissionsDb, enforce plan limit
+5. Update `RecruiterDashboard.tsx`: replace mock calls with submissionsDb, add status transition dropdown per row, subscribe to real-time channel
+6. Update `VendorDashboard.tsx`: replace mock calls with submissionsDb, add 5-stage progress bar per submission
+7. Update `RequirementDetailPage.tsx`: use submissionsDb, subscribe to real-time, kanban advances persist to Supabase
+8. Validate (typecheck + build)

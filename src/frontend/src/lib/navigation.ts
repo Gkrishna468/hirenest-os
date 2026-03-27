@@ -1,7 +1,9 @@
 import {
   Briefcase,
+  Building2,
   CreditCard,
   GitBranch,
+  History,
   LayoutDashboard,
   MessageSquare,
   ShieldCheck,
@@ -16,6 +18,8 @@ export const navigationByRole = {
     { label: "Requirements", to: "/requirements", icon: Briefcase },
     { label: "AI Match", to: "/ai-match", icon: Sparkles },
     { label: "Deal Room", to: "/deal-room", icon: MessageSquare },
+    { label: "Vendors", to: "/vendors", icon: Building2 },
+    { label: "Match History", to: "/match-history", icon: History },
     { label: "Verify", to: "/admin/verification", icon: ShieldCheck },
     { label: "Revenue", to: "/admin/revenue", icon: TrendingUp },
   ],
@@ -36,5 +40,6 @@ export const navigationByRole = {
     { label: "Requirements", to: "/requirements", icon: Briefcase },
     { label: "Deal Room", to: "/deal-room", icon: MessageSquare },
     { label: "Pipeline", to: "/dashboard/recruiter", icon: GitBranch },
+    { label: "Match History", to: "/match-history", icon: History },
   ],
 };

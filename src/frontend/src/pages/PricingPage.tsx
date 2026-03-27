@@ -2,6 +2,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -9,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { useActor } from "@/hooks/useActor";
 import { Check, Loader2, Minus, Sparkles, X, Zap } from "lucide-react";
 import { motion } from "motion/react";
@@ -104,9 +120,193 @@ function FeatureCell({ value }: { value: boolean | string }) {
   );
 }
 
+interface SalesFormData {
+  name: string;
+  company: string;
+  email: string;
+  teamSize: string;
+  message: string;
+}
+
+function ContactSalesModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState<SalesFormData>({
+    name: "",
+    company: "",
+    email: "",
+    teamSize: "",
+    message: "",
+  });
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    await new Promise((r) => setTimeout(r, 900)); // simulate request
+    setLoading(false);
+    setSubmitted(true);
+  };
+
+  const handleClose = () => {
+    setSubmitted(false);
+    setForm({ name: "", company: "", email: "", teamSize: "", message: "" });
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent
+        className="bg-card border-border max-w-md"
+        data-ocid="pricing.dialog"
+      >
+        <DialogHeader>
+          <DialogTitle className="text-foreground">
+            Talk to Enterprise Sales
+          </DialogTitle>
+        </DialogHeader>
+
+        {submitted ? (
+          <div className="py-8 text-center" data-ocid="pricing.success_state">
+            <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+              <Check className="h-7 w-7 text-green-600" />
+            </div>
+            <h3 className="font-display font-bold text-lg text-foreground mb-2">
+              Request Sent!
+            </h3>
+            <p className="text-muted-foreground text-sm">
+              Thanks! We&apos;ll reach out within 24 hours.
+            </p>
+            <Button
+              className="mt-6 bg-teal text-white hover:opacity-90 font-semibold w-full"
+              onClick={handleClose}
+              data-ocid="pricing.close_button"
+            >
+              Done
+            </Button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Tell us about your needs and we&apos;ll get back to you within 24
+              hours.
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm text-muted-foreground">Name</Label>
+                <Input
+                  required
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Priya Sharma"
+                  className="mt-1 bg-muted/20 border-border text-foreground"
+                  data-ocid="pricing.input"
+                />
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Company</Label>
+                <Input
+                  required
+                  value={form.company}
+                  onChange={(e) =>
+                    setForm({ ...form, company: e.target.value })
+                  }
+                  placeholder="Infosys"
+                  className="mt-1 bg-muted/20 border-border text-foreground"
+                  data-ocid="pricing.input"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm text-muted-foreground">
+                Work Email
+              </Label>
+              <Input
+                required
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="priya@company.com"
+                className="mt-1 bg-muted/20 border-border text-foreground"
+                data-ocid="pricing.input"
+              />
+            </div>
+
+            <div>
+              <Label className="text-sm text-muted-foreground">Team Size</Label>
+              <Select
+                value={form.teamSize}
+                onValueChange={(v) => setForm({ ...form, teamSize: v })}
+              >
+                <SelectTrigger
+                  className="mt-1 bg-muted/20 border-border"
+                  data-ocid="pricing.select"
+                >
+                  <SelectValue placeholder="Select team size..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1-10">1–10 people</SelectItem>
+                  <SelectItem value="11-50">11–50 people</SelectItem>
+                  <SelectItem value="51-200">51–200 people</SelectItem>
+                  <SelectItem value="200+">200+ people</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm text-muted-foreground">Message</Label>
+              <Textarea
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
+                placeholder="What's your current hiring challenge?"
+                className="mt-1 bg-muted/20 border-border text-foreground min-h-[80px] resize-none"
+                data-ocid="pricing.textarea"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="flex-1 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+                data-ocid="pricing.cancel_button"
+              >
+                Cancel
+              </button>
+              <Button
+                type="submit"
+                className="flex-1 bg-teal text-white hover:opacity-90 font-semibold"
+                disabled={loading}
+                data-ocid="pricing.submit_button"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Request Demo"
+                )}
+              </Button>
+            </div>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function PricingPage() {
   const { actor, isFetching } = useActor();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [salesModalOpen, setSalesModalOpen] = useState(false);
 
   const handleProUpgrade = async () => {
     if (!actor || isFetching) {
@@ -135,12 +335,6 @@ export function PricingPage() {
     }
   };
 
-  const handleContactSales = () => {
-    toast("Our team will reach out to discuss enterprise options.", {
-      description: "Email us at sales@hirenestworkforce.com",
-    });
-  };
-
   return (
     <div
       className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
@@ -161,8 +355,8 @@ export function PricingPage() {
           Plans that grow with you
         </h1>
         <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-          Start free, scale when you're ready. No hidden fees — pay only when
-          you place talent.
+          Start free, scale when you&apos;re ready. No hidden fees — pay only
+          when you place talent.
         </p>
       </motion.div>
 
@@ -239,8 +433,8 @@ export function PricingPage() {
                   <Button
                     variant="outline"
                     className="w-full border-border"
-                    onClick={handleContactSales}
-                    data-ocid="pricing.secondary_button"
+                    onClick={() => setSalesModalOpen(true)}
+                    data-ocid="pricing.open_modal_button"
                   >
                     {tier.cta}
                   </Button>
@@ -292,9 +486,7 @@ export function PricingPage() {
               {COMPARISON_FEATURES.map((row, i) => (
                 <TableRow
                   key={row.label}
-                  className={`border-border ${
-                    i % 2 === 0 ? "bg-transparent" : "bg-muted/20"
-                  }`}
+                  className={`border-border ${i % 2 === 0 ? "bg-transparent" : "bg-muted/20"}`}
                   data-ocid={`pricing.row.${i + 1}`}
                 >
                   <TableCell className="font-medium text-sm">
@@ -333,6 +525,12 @@ export function PricingPage() {
           </p>
         </div>
       </motion.div>
+
+      {/* Contact Sales Modal */}
+      <ContactSalesModal
+        open={salesModalOpen}
+        onClose={() => setSalesModalOpen(false)}
+      />
     </div>
   );
 }

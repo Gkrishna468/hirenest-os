@@ -47,7 +47,14 @@ export interface Submission {
   requirement_id: string;
   candidate_id: string;
   match_score: number;
-  status: "submitted" | "shortlisted" | "interview" | "closed" | "rejected";
+  status:
+    | "submitted"
+    | "shortlisted"
+    | "interview"
+    | "offer_extended"
+    | "joined"
+    | "closed"
+    | "rejected";
   notes: string;
   created_at: string;
   candidate?: Candidate;

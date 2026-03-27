@@ -47,6 +47,7 @@ create table public.submissions (
   id uuid primary key default gen_random_uuid(),
   requirement_id uuid references requirements(id),
   candidate_id uuid references candidates(id),
+  vendor_id text not null default 'vendor-1',
   match_score int,
   status text default 'submitted',
   notes text,
@@ -104,4 +105,23 @@ create table public.vendor_subscriptions (
   status text default 'active',
   created_at timestamptz default now()
 );
+
+create table if not exists public.placement_transactions (
+  id uuid primary key default gen_random_uuid(),
+  requirement_id uuid references requirements(id),
+  candidate_id uuid references candidates(id),
+  vendor_id text not null,
+  status text not null default 'submitted',
+  match_score int default 0,
+  notes text,
+  total_budget numeric(12,2),
+  your_commission numeric(12,2),
+  vendor_payout numeric(12,2),
+  client_payment_status text default 'pending',
+  vendor_payout_status text default 'pending',
+  joined_date timestamptz,
+  created_at timestamptz default now()
+);
+alter publication supabase_realtime add table submissions;
+alter publication supabase_realtime add table placement_transactions;
 `;

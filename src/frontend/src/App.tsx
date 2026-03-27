@@ -15,20 +15,24 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { AIMatchPage } from "./pages/AIMatchPage";
 import { AdminRevenuePage } from "./pages/AdminRevenuePage";
 import { AdminVerificationPage } from "./pages/AdminVerificationPage";
+import { CandidateProfilePage } from "./pages/CandidateProfilePage";
 import { ClientDashboard } from "./pages/ClientDashboard";
 import { ClientSpendingPage } from "./pages/ClientSpendingPage";
 import { CompanyDashboard } from "./pages/CompanyDashboard";
 import { DealRoomPage } from "./pages/DealRoomPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
+import { MatchHistoryPage } from "./pages/MatchHistoryPage";
 import { NewVendorDashboard } from "./pages/NewVendorDashboard";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { PricingPage } from "./pages/PricingPage";
 import { RecruiterDashboard } from "./pages/RecruiterDashboard";
+import { RecruiterWorkflowPage } from "./pages/RecruiterWorkflowPage";
 import { RequirementDetailPage } from "./pages/RequirementDetailPage";
 import { RequirementsPage } from "./pages/RequirementsPage";
 import { TalentPage } from "./pages/TalentPage";
 import { VendorDashboard } from "./pages/VendorDashboard";
+import { VendorDirectoryPage } from "./pages/VendorDirectoryPage";
 import { VendorEarningsPage } from "./pages/VendorEarningsPage";
 import {
   VendorSubscriptionCancel,
@@ -104,6 +108,24 @@ const talentRoute = createRoute({
   component: TalentPage,
 });
 
+const candidateProfileRoute = createRoute({
+  getParentRoute: () => mainLayoutRoute,
+  path: "/candidates/$candidateId",
+  component: CandidateProfilePage,
+});
+
+const matchHistoryRoute = createRoute({
+  getParentRoute: () => mainLayoutRoute,
+  path: "/match-history",
+  component: MatchHistoryPage,
+});
+
+const vendorDirectoryRoute = createRoute({
+  getParentRoute: () => mainLayoutRoute,
+  path: "/vendors",
+  component: VendorDirectoryPage,
+});
+
 const loginRoute = createRoute({
   getParentRoute: () => authLayoutRoute,
   path: "/login",
@@ -162,6 +184,12 @@ const oldVendorDashRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/dashboard/vendor",
   component: VendorDashboard,
+});
+
+const recruiterWorkflowRoute = createRoute({
+  getParentRoute: () => mainLayoutRoute,
+  path: "/recruiter/dashboard",
+  component: RecruiterWorkflowPage,
 });
 
 const recruiterDashRoute = createRoute({
@@ -226,6 +254,9 @@ const routeTree = rootRoute.addChildren([
     requirementsRoute,
     requirementDetailRoute,
     talentRoute,
+    candidateProfileRoute,
+    matchHistoryRoute,
+    vendorDirectoryRoute,
     clientDashRoute,
     clientSpendingRoute,
     vendorDashRoute,
@@ -235,6 +266,7 @@ const routeTree = rootRoute.addChildren([
     companyDashRoute,
     oldVendorDashRoute,
     recruiterDashRoute,
+    recruiterWorkflowRoute,
     adminVerificationRoute,
     adminRevenueRoute,
     pricingRoute,

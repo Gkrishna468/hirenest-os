@@ -18,33 +18,79 @@ import {
   type Submission,
   createCandidate,
   getCandidates,
-  getSubmissions,
 } from "@/lib/db";
+import { type PlanStatus, getPlanStatusAsync } from "@/lib/planEnforcement";
+import { getSubmissionsForVendor } from "@/lib/submissionsDb";
 import { Link } from "@tanstack/react-router";
 import { Award, Plus, Target, TrendingUp, Users } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 
-const STATS = [
-  { label: "Bench Strength", value: "9", icon: Users, color: "text-teal" },
-  {
-    label: "Requirements Matched",
-    value: "7",
-    icon: Target,
-    color: "text-orange",
-  },
-  {
-    label: "Submissions Made",
-    value: "5",
-    icon: TrendingUp,
-    color: "text-teal",
-  },
-  { label: "Selection Rate", value: "40%", icon: Award, color: "text-orange" },
+const PIPELINE_STAGES: Submission["status"][] = [
+  "submitted",
+  "shortlisted",
+  "interview",
+  "offer_extended",
+  "joined",
 ];
+
+const STAGE_LABELS: Record<string, string> = {
+  submitted: "Submitted",
+  shortlisted: "Shortlisted",
+  interview: "Interview",
+  offer_extended: "Offer",
+  joined: "Joined",
+};
+
+function PipelineTracker({ status }: { status: Submission["status"] }) {
+  const isRejected = status === "rejected" || status === "closed";
+  const activeIdx = isRejected ? -1 : PIPELINE_STAGES.indexOf(status);
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border">
+      {isRejected ? (
+        <p className="text-xs text-red-500 font-medium text-center">Rejected</p>
+      ) : (
+        <div className="flex items-center gap-1">
+          {PIPELINE_STAGES.map((stage, idx) => (
+            <div key={stage} className="flex items-center flex-1 min-w-0">
+              <div className="flex flex-col items-center flex-shrink-0">
+                <div
+                  className={`w-3 h-3 rounded-full border-2 transition-colors ${
+                    idx <= activeIdx
+                      ? "bg-teal border-teal"
+                      : "bg-background border-muted-foreground/30"
+                  }`}
+                />
+                <span
+                  className={`text-[9px] mt-0.5 whitespace-nowrap ${
+                    idx <= activeIdx
+                      ? "text-teal font-semibold"
+                      : "text-muted-foreground/50"
+                  }`}
+                >
+                  {STAGE_LABELS[stage]}
+                </span>
+              </div>
+              {idx < PIPELINE_STAGES.length - 1 && (
+                <div
+                  className={`h-0.5 flex-1 mx-0.5 transition-colors ${
+                    idx < activeIdx ? "bg-teal" : "bg-muted-foreground/20"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function VendorDashboard() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [planStatus, setPlanStatus] = useState<PlanStatus | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -57,7 +103,11 @@ export function VendorDashboard() {
   });
 
   useEffect(() => {
-    Promise.all([getCandidates(), getSubmissions()]).then(([c, s]) => {
+    Promise.all([
+      getCandidates(),
+      getSubmissionsForVendor("vendor-1"),
+      getPlanStatusAsync("vendor-1"),
+    ]).then(([c, s, plan]) => {
       setCandidates(
         c.filter(
           (cand) =>
@@ -65,6 +115,7 @@ export function VendorDashboard() {
         ),
       );
       setSubmissions(s);
+      setPlanStatus(plan);
     });
   }, []);
 
@@ -100,6 +151,35 @@ export function VendorDashboard() {
       bio: "",
     });
   };
+
+  const STATS = [
+    {
+      label: "Bench Strength",
+      value: String(candidates.length),
+      icon: Users,
+      color: "text-teal",
+    },
+    {
+      label: "Requirements Matched",
+      value: "7",
+      icon: Target,
+      color: "text-orange",
+    },
+    {
+      label: "Submissions Made",
+      value: planStatus
+        ? String(planStatus.submissionsUsed)
+        : String(submissions.length),
+      icon: TrendingUp,
+      color: "text-teal",
+    },
+    {
+      label: "Selection Rate",
+      value: "40%",
+      icon: Award,
+      color: "text-orange",
+    },
+  ];
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -258,6 +338,32 @@ export function VendorDashboard() {
           </Dialog>
         </div>
 
+        {planStatus && (
+          <div
+            className={`mb-6 rounded-xl px-4 py-3 flex items-center justify-between text-sm ${
+              !planStatus.canSubmit
+                ? "bg-red-50 border border-red-200 text-red-700"
+                : "bg-teal/5 border border-teal/20 text-teal"
+            }`}
+            data-ocid="vendor.panel"
+          >
+            <span>
+              Plan:{" "}
+              <span className="font-semibold capitalize">
+                {planStatus.tier}
+              </span>{" "}
+              &mdash; {planStatus.submissionsUsed}/
+              {planStatus.submissionsLimit ?? "\u221e"} submissions used this
+              month
+            </span>
+            {!planStatus.canSubmit && (
+              <span className="font-semibold text-red-700">
+                Limit reached — upgrade to Pro for unlimited submissions
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {STATS.map((s) => (
             <motion.div
@@ -352,6 +458,7 @@ export function VendorDashboard() {
                       <StatusBadge status={sub.status} />
                     </div>
                   </div>
+                  <PipelineTracker status={sub.status} />
                 </div>
               ))}
               {submissions.length === 0 && (

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import type { Candidate } from "@/lib/db";
 import { getTrainingRecommendation } from "@/lib/training";
+import { Link } from "@tanstack/react-router";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Briefcase, DollarSign, MapPin } from "lucide-react";
 import { CircularScoreBadge } from "./CircularScoreBadge";
@@ -46,7 +47,14 @@ export function CandidateCard({
             {getInitials(c.name)}
           </div>
           <div>
-            <h3 className="font-semibold text-foreground text-sm">{c.name}</h3>
+            <Link
+              to="/candidates/$candidateId"
+              params={{ candidateId: c.id }}
+              className="font-semibold text-foreground text-sm hover:text-teal transition-colors"
+              data-ocid="candidate.link"
+            >
+              {c.name}
+            </Link>
             <p className="text-xs text-muted-foreground">{c.role}</p>
           </div>
         </div>

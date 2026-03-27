@@ -3,22 +3,36 @@ import { SkillChip } from "@/components/SkillChip";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { type Requirement, type Submission, getRequirements } from "@/lib/db";
 import {
-  type Requirement,
-  type Submission,
-  getRequirements,
-  getSubmissions,
-} from "@/lib/db";
+  getSubmissionsForRequirement,
+  subscribeToRequirementSubmissions,
+  updateSubmissionStatusDB,
+} from "@/lib/submissionsDb";
 import { Link } from "@tanstack/react-router";
-import {
-  ChevronDown,
-  ChevronUp,
-  ClipboardList,
-  Save,
-  ThumbsUp,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, ClipboardList, Save } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+const STATUS_OPTIONS: Submission["status"][] = [
+  "submitted",
+  "shortlisted",
+  "interview",
+  "offer_extended",
+  "joined",
+  "rejected",
+];
+
+const STATUS_COLORS: Record<Submission["status"], string> = {
+  submitted: "text-slate-600 bg-slate-100 border-slate-200",
+  shortlisted: "text-blue-700 bg-blue-100 border-blue-200",
+  interview: "text-amber-700 bg-amber-100 border-amber-200",
+  offer_extended: "text-purple-700 bg-purple-100 border-purple-200",
+  joined: "text-green-700 bg-green-100 border-green-200",
+  rejected: "text-red-700 bg-red-100 border-red-200",
+  closed: "text-gray-600 bg-gray-100 border-gray-200",
+};
 
 export function RecruiterDashboard() {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
@@ -32,7 +46,9 @@ export function RecruiterDashboard() {
   useEffect(() => {
     getRequirements().then(async (reqs) => {
       setRequirements(reqs);
-      const subs = await Promise.all(reqs.map((r) => getSubmissions(r.id)));
+      const subs = await Promise.all(
+        reqs.map((r) => getSubmissionsForRequirement(r.id)),
+      );
       const map: Record<string, Submission[]> = {};
       for (const [i, r] of reqs.entries()) {
         map[r.id] = subs[i];
@@ -41,8 +57,30 @@ export function RecruiterDashboard() {
     });
   }, []);
 
-  const handleBoost = (subId: string) => {
-    console.log("Boosting submission", subId);
+  // Subscribe to real-time updates when a requirement is expanded
+  useEffect(() => {
+    if (!expandedReq) return;
+    const unsubscribe = subscribeToRequirementSubmissions(
+      expandedReq,
+      (updated) => {
+        setSubmissionsByReq((prev) => ({ ...prev, [expandedReq]: updated }));
+      },
+    );
+    return unsubscribe;
+  }, [expandedReq]);
+
+  const handleStatusChange = async (
+    sub: Submission,
+    newStatus: Submission["status"],
+  ) => {
+    await updateSubmissionStatusDB(sub.id, newStatus);
+    setSubmissionsByReq((prev) => ({
+      ...prev,
+      [sub.requirement_id]: (prev[sub.requirement_id] || []).map((s) =>
+        s.id === sub.id ? { ...s, status: newStatus } : s,
+      ),
+    }));
+    toast.success(`Status updated to ${newStatus.replace("_", " ")}`);
   };
 
   const handleSaveNote = (subId: string) => {
@@ -157,16 +195,27 @@ export function RecruiterDashboard() {
                                 score={sub.match_score}
                                 size={44}
                               />
-                              <StatusBadge status={sub.status} />
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 px-2 border-teal/30 text-teal hover:bg-teal/10 text-xs"
-                                onClick={() => handleBoost(sub.id)}
-                                data-ocid="recruiter.primary_button"
+                              {/* Status dropdown */}
+                              <select
+                                value={sub.status}
+                                onChange={(e) =>
+                                  handleStatusChange(
+                                    sub,
+                                    e.target.value as Submission["status"],
+                                  )
+                                }
+                                className={`text-xs px-2 py-1 rounded-lg border font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-teal/40 ${
+                                  STATUS_COLORS[sub.status] ||
+                                  "text-slate-600 bg-slate-100 border-slate-200"
+                                }`}
+                                data-ocid="recruiter.select"
                               >
-                                <ThumbsUp className="h-3 w-3 mr-1" /> Boost
-                              </Button>
+                                {STATUS_OPTIONS.map((opt) => (
+                                  <option key={opt} value={opt}>
+                                    {opt.replace("_", " ")}
+                                  </option>
+                                ))}
+                              </select>
                             </div>
                             <div className="flex gap-2">
                               <Textarea
@@ -184,7 +233,11 @@ export function RecruiterDashboard() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className={`h-auto px-2 border-border self-end ${savedNotes[sub.id] ? "border-teal/50 text-teal" : ""}`}
+                                className={`h-auto px-2 border-border self-end ${
+                                  savedNotes[sub.id]
+                                    ? "border-teal/50 text-teal"
+                                    : ""
+                                }`}
                                 onClick={() => handleSaveNote(sub.id)}
                                 data-ocid="recruiter.save_button"
                               >
