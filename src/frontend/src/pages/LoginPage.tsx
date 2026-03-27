@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { setCurrentRole } from "@/lib/roleStore";
+import { isSupabaseConnected, supabase } from "@/lib/supabase";
 import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Zap } from "lucide-react";
 import { motion } from "motion/react";
@@ -55,10 +56,11 @@ export function LoginPage() {
     e.preventDefault();
     setLoginError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
 
+    // Admin always uses passphrase — never Supabase
     if (role === "admin") {
+      await new Promise((r) => setTimeout(r, 400));
+      setLoading(false);
       if (loginData.password !== "hirenest2026") {
         setLoginError("Invalid admin credentials.");
         return;
@@ -68,14 +70,12 @@ export function LoginPage() {
       return;
     }
 
-    // Map login role to stored role
     const storedRole =
       role === "company"
         ? "client"
         : role === "recruiter"
           ? "recruiter"
           : "vendor";
-    setCurrentRole(storedRole as "client" | "vendor" | "recruiter");
 
     const path =
       role === "company"
@@ -83,15 +83,74 @@ export function LoginPage() {
         : role === "recruiter"
           ? "/dashboard/recruiter"
           : "/vendor/dashboard";
-    navigate({ to: path });
+
+    if (isSupabaseConnected && supabase) {
+      // Real Supabase auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginData.email,
+        password: loginData.password,
+      });
+      setLoading(false);
+      if (error) {
+        setLoginError(error.message);
+        return;
+      }
+      if (data.user) {
+        // Upsert profile with role
+        await supabase.from("profiles").upsert({
+          id: data.user.id,
+          email: data.user.email,
+          role: storedRole,
+        });
+        setCurrentRole(storedRole as "client" | "vendor" | "recruiter");
+        navigate({ to: path });
+      }
+    } else {
+      // Mock fallback when Supabase is not configured
+      await new Promise((r) => setTimeout(r, 800));
+      setLoading(false);
+      setCurrentRole(storedRole as "client" | "vendor" | "recruiter");
+      navigate({ to: path });
+    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    navigate({ to: "/onboarding" });
+
+    if (isSupabaseConnected && supabase) {
+      const storedRole =
+        regData.role === "company"
+          ? "client"
+          : regData.role === "recruiter"
+            ? "recruiter"
+            : "vendor";
+      const { data, error } = await supabase.auth.signUp({
+        email: regData.email,
+        password: regData.password,
+        options: { data: { role: storedRole, name: regData.name } },
+      });
+      setLoading(false);
+      if (error) {
+        setLoginError(error.message);
+        return;
+      }
+      if (data.user) {
+        await supabase.from("profiles").insert({
+          id: data.user.id,
+          email: regData.email,
+          name: regData.name,
+          role: storedRole,
+        });
+        setCurrentRole(storedRole as "client" | "vendor" | "recruiter");
+        navigate({ to: "/onboarding" });
+      }
+    } else {
+      await new Promise((r) => setTimeout(r, 800));
+      setLoading(false);
+      navigate({ to: "/onboarding" });
+    }
   };
 
   // Step 1: User type selection

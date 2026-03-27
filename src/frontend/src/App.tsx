@@ -6,7 +6,9 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  useNavigate,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { AccessDenied } from "./components/AccessDenied";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
@@ -47,6 +49,31 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   }
   // If null (not logged in) or admin, render the page (which has its own AdminLockScreen)
   return <>{children}</>;
+}
+
+function VendorGuard({ children }: { children: React.ReactNode }) {
+  const role = getCurrentRole();
+  if (!role || role !== "vendor") {
+    // Redirect to login — use a component that triggers navigation
+    return <RedirectToLogin />;
+  }
+  return <>{children}</>;
+}
+
+function RecruiterGuard({ children }: { children: React.ReactNode }) {
+  const role = getCurrentRole();
+  if (!role || role !== "recruiter") {
+    return <RedirectToLogin />;
+  }
+  return <>{children}</>;
+}
+
+function RedirectToLogin() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate({ to: "/login" });
+  }, [navigate]);
+  return null;
 }
 
 function MainLayout() {
@@ -153,7 +180,11 @@ const clientSpendingRoute = createRoute({
 const vendorDashRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/vendor/dashboard",
-  component: NewVendorDashboard,
+  component: () => (
+    <VendorGuard>
+      <NewVendorDashboard />
+    </VendorGuard>
+  ),
 });
 
 const vendorEarningsRoute = createRoute({
@@ -189,13 +220,21 @@ const oldVendorDashRoute = createRoute({
 const recruiterWorkflowRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/recruiter/dashboard",
-  component: RecruiterWorkflowPage,
+  component: () => (
+    <RecruiterGuard>
+      <RecruiterWorkflowPage />
+    </RecruiterGuard>
+  ),
 });
 
 const recruiterDashRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/dashboard/recruiter",
-  component: RecruiterDashboard,
+  component: () => (
+    <RecruiterGuard>
+      <RecruiterDashboard />
+    </RecruiterGuard>
+  ),
 });
 
 const adminVerificationRoute = createRoute({

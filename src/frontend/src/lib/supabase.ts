@@ -1,12 +1,95 @@
-import { createClient } from "@supabase/supabase-js";
+// Supabase client — dynamically loaded only when env vars are present
+// Falls back to null stubs so the app works without Supabase configured
 
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string) || "";
 const supabaseKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || "";
 
 export const isSupabaseConnected = !!supabaseUrl && !!supabaseKey;
 
-export const supabase = isSupabaseConnected
-  ? createClient(supabaseUrl, supabaseKey)
+// Minimal type stubs so consumers can type-check without the real package
+export type SupabaseAuthResponse = {
+  data: {
+    user: { id: string; email?: string } | null;
+    session: unknown | null;
+  };
+  error: { message: string } | null;
+};
+
+type QueryResult = { data: any; error: any; count?: number | null };
+
+type QueryBuilder = {
+  select: (...args: unknown[]) => QueryBuilder;
+  insert: (data: unknown) => QueryBuilder;
+  upsert: (data: unknown) => QueryBuilder;
+  update: (data: unknown) => QueryBuilder;
+  delete: () => QueryBuilder;
+  eq: (col: string, val: unknown) => QueryBuilder;
+  neq: (col: string, val: unknown) => QueryBuilder;
+  gte: (col: string, val: unknown) => QueryBuilder;
+  lte: (col: string, val: unknown) => QueryBuilder;
+  gt: (col: string, val: unknown) => QueryBuilder;
+  lt: (col: string, val: unknown) => QueryBuilder;
+  in: (col: string, vals: unknown[]) => QueryBuilder;
+  contains: (col: string, val: unknown) => QueryBuilder;
+  order: (col: string, opts?: unknown) => QueryBuilder;
+  limit: (n: number) => QueryBuilder;
+  range: (from: number, to: number) => QueryBuilder;
+  single: () => Promise<QueryResult>;
+  maybeSingle: () => Promise<QueryResult>;
+  then: <T>(
+    resolve: (val: QueryResult) => T,
+    reject?: (err: unknown) => T,
+  ) => Promise<T>;
+  count?: number | null;
+} & Promise<QueryResult>;
+
+type RealtimeChannel = {
+  on: (...args: unknown[]) => RealtimeChannel;
+  subscribe: (cb?: unknown) => { unsubscribe: () => void };
+};
+
+type SupabaseAuth = {
+  signInWithPassword: (opts: {
+    email: string;
+    password: string;
+  }) => Promise<SupabaseAuthResponse>;
+  signUp: (opts: {
+    email: string;
+    password: string;
+    options?: unknown;
+  }) => Promise<SupabaseAuthResponse>;
+  signOut: () => Promise<void>;
+  getUser: () => Promise<{
+    data: { user: { id: string; email?: string } | null };
+    error: unknown;
+  }>;
+  getSession: () => Promise<{ data: { session: unknown | null } }>;
+  onAuthStateChange: (cb: (event: string, session: unknown) => void) => {
+    data: { subscription: { unsubscribe: () => void } };
+  };
+};
+
+export type SupabaseClient = {
+  auth: SupabaseAuth;
+  from: (table: string) => QueryBuilder;
+  channel: (name: string) => RealtimeChannel;
+  removeChannel: (channel: RealtimeChannel | unknown) => void;
+};
+
+function createSupabaseClient(url: string, key: string): SupabaseClient {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createClient } = require("@supabase/supabase-js") as {
+      createClient: (url: string, key: string) => SupabaseClient;
+    };
+    return createClient(url, key);
+  } catch {
+    throw new Error("@supabase/supabase-js not installed");
+  }
+}
+
+export const supabase: SupabaseClient | null = isSupabaseConnected
+  ? createSupabaseClient(supabaseUrl, supabaseKey)
   : null;
 
 export const SUPABASE_SCHEMA = `

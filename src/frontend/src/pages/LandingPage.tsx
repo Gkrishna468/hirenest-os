@@ -236,7 +236,7 @@ const PRICING_PLANS = [
     priceNote: "No credit card required",
     features: [
       "Browse all requirements",
-      "Submit up to 5 candidates/month",
+      "Submit up to 3 candidates/month",
       "Basic AI match scores",
       "Vendor profile page",
     ],
@@ -246,17 +246,17 @@ const PRICING_PLANS = [
     ctaStyle: "border border-border text-foreground hover:bg-muted",
   },
   {
-    name: "Growth",
-    price: "Commission",
-    priceNote: "% per successful placement",
+    name: "Vendor Pro",
+    price: "₹2,999",
+    priceNote: "per month",
     features: [
-      "Unlimited submissions",
-      "Full AI match scores & gaps",
-      "Dedicated recruiter support",
-      "Priority listing placement",
+      "Unlimited candidate submissions",
+      "Priority AI matching algorithm",
+      "Verified Vendor badge",
+      "Featured listings (top of search)",
       "Advanced analytics dashboard",
     ],
-    cta: "Start Growing",
+    cta: "Start Pro",
     popular: true,
     accent: "border-teal/40 glow-teal",
     ctaStyle: "bg-teal text-background hover:bg-teal/90",
@@ -266,7 +266,7 @@ const PRICING_PLANS = [
     price: "Custom",
     priceNote: "Tailored to your scale",
     features: [
-      "Everything in Growth",
+      "Everything in Vendor Pro",
       "White-label option",
       "API & webhook access",
       "ATS / HRIS integration",
@@ -366,7 +366,7 @@ export function LandingPage() {
 
               {/* Dual CTA path selectors */}
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link to="/requirements" className="flex-1">
+                <Link to="/login" className="flex-1">
                   <button
                     type="button"
                     className="w-full group flex items-center gap-3 h-auto py-4 px-5 rounded-xl bg-teal/10 border border-teal/30 hover:bg-teal/20 hover:border-teal/50 transition-all"
@@ -386,7 +386,7 @@ export function LandingPage() {
                     <ArrowRight className="h-4 w-4 text-teal group-hover:translate-x-1 transition-transform" />
                   </button>
                 </Link>
-                <Link to="/onboarding" className="flex-1">
+                <Link to="/login" className="flex-1">
                   <button
                     type="button"
                     className="w-full group flex items-center gap-3 h-auto py-4 px-5 rounded-xl bg-orange/10 border border-orange/30 hover:bg-orange/20 hover:border-orange/50 transition-all"
