@@ -17,8 +17,9 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+// ✅ MODIFIED: Added "AI Match" to public navigation
 const PUBLIC_NAV_LINKS = [
-  { label: "AI Match", to: "/ai-match" },
+  { label: "AI Match", to: "/ai-match" },        // ← ADDED THIS LINE
   { label: "Talent Bench", to: "/talent" },
   { label: "Requirements", to: "/requirements" },
   { label: "Deal Room", to: "/deal-room" },
@@ -27,7 +28,7 @@ const PUBLIC_NAV_LINKS = [
 
 const ICON_MAP: Record<string, React.ElementType> = {
   "/deal-room": MessageSquare,
-  "/ai-match": Sparkles,
+  "/ai-match": Sparkles,                          // ← ADDED THIS LINE (icon for AI Match)
   "/admin/verification": ShieldCheck,
   "/admin/revenue": TrendingUp,
   "/requirements": Briefcase,
@@ -101,7 +102,7 @@ export function Navbar() {
                 "icon" in link && link.icon ? link.icon : ICON_MAP[link.to];
               return (
                 <Link
-                  key={link.label}
+                  key={link.to}
                   to={link.to}
                   className={`text-sm transition-colors flex items-center gap-1 ${
                     currentPath === link.to
@@ -188,7 +189,7 @@ export function Navbar() {
               "icon" in link && link.icon ? link.icon : ICON_MAP[link.to];
             return (
               <Link
-                key={link.label}
+                key={link.to}
                 to={link.to}
                 className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
                 onClick={() => setMobileOpen(false)}
