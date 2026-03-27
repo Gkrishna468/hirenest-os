@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { setCurrentRole } from "@/lib/roleStore";
 import { isSupabaseConnected, supabase } from "@/lib/supabase";
 import { useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, Zap } from "lucide-react";
+import { Eye, EyeOff, Lock, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 
@@ -45,6 +45,8 @@ export function LoginPage() {
   const [role, setRole] = useState<Role | null>(null);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [loginError, setLoginError] = useState("");
+  const [passphrase, setPassphrase] = useState("");
+  const [showPassphrase, setShowPassphrase] = useState(false);
   const [regData, setRegData] = useState({
     name: "",
     email: "",
@@ -52,23 +54,24 @@ export function LoginPage() {
     role: "company" as Role,
   });
 
+  const handleAdminUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    setLoading(true);
+    await new Promise((r) => setTimeout(r, 400));
+    setLoading(false);
+    if (passphrase !== "hirenest2026") {
+      setLoginError("Incorrect passphrase.");
+      return;
+    }
+    setCurrentRole("admin");
+    navigate({ to: "/admin/revenue" });
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
     setLoading(true);
-
-    // Admin always uses passphrase — never Supabase
-    if (role === "admin") {
-      await new Promise((r) => setTimeout(r, 400));
-      setLoading(false);
-      if (loginData.password !== "hirenest2026") {
-        setLoginError("Invalid admin credentials.");
-        return;
-      }
-      setCurrentRole("admin");
-      navigate({ to: "/admin/revenue" });
-      return;
-    }
 
     const storedRole =
       role === "company"
@@ -85,7 +88,6 @@ export function LoginPage() {
           : "/vendor/dashboard";
 
     if (isSupabaseConnected && supabase) {
-      // Real Supabase auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email: loginData.email,
         password: loginData.password,
@@ -96,7 +98,6 @@ export function LoginPage() {
         return;
       }
       if (data.user) {
-        // Upsert profile with role
         await supabase.from("profiles").upsert({
           id: data.user.id,
           email: data.user.email,
@@ -106,7 +107,6 @@ export function LoginPage() {
         navigate({ to: path });
       }
     } else {
-      // Mock fallback when Supabase is not configured
       await new Promise((r) => setTimeout(r, 800));
       setLoading(false);
       setCurrentRole(storedRole as "client" | "vendor" | "recruiter");
@@ -203,9 +203,114 @@ export function LoginPage() {
     );
   }
 
-  // Step 2: Login/register form
   const selectedType = USER_TYPES.find((u) => u.role === role)!;
 
+  // Step 2a: Admin — passphrase-only form
+  if (role === "admin") {
+    return (
+      <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm"
+        >
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <div className="w-10 h-10 bg-teal rounded-xl flex items-center justify-center">
+                <Zap className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <h1 className="font-display text-2xl font-bold text-foreground">
+              HireNest <span className="text-teal">OS</span>
+            </h1>
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <span className="text-2xl">{selectedType.icon}</span>
+              <span className="text-muted-foreground text-sm">
+                {selectedType.title}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setRole(null);
+                  setLoginError("");
+                  setPassphrase("");
+                }}
+                className="text-xs text-teal hover:underline ml-1"
+                data-ocid="login.back_button"
+              >
+                ← Change
+              </button>
+            </div>
+          </div>
+
+          <div className="card-surface rounded-2xl p-6">
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-14 h-14 bg-teal/10 rounded-2xl flex items-center justify-center mb-3">
+                <Lock className="h-7 w-7 text-teal" />
+              </div>
+              <p className="text-sm text-muted-foreground text-center">
+                Enter the admin passphrase to access the platform dashboard.
+              </p>
+            </div>
+
+            <form onSubmit={handleAdminUnlock} className="space-y-4">
+              <div>
+                <Label className="text-muted-foreground text-sm">
+                  Admin Passphrase
+                </Label>
+                <div className="relative mt-1">
+                  <Input
+                    type={showPassphrase ? "text" : "password"}
+                    required
+                    placeholder="Enter passphrase"
+                    value={passphrase}
+                    onChange={(e) => {
+                      setPassphrase(e.target.value);
+                      setLoginError("");
+                    }}
+                    className="bg-muted/20 border-border text-foreground placeholder:text-muted-foreground pr-10"
+                    data-ocid="admin.input"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassphrase(!showPassphrase)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  >
+                    {showPassphrase ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {loginError && (
+                <p
+                  className="text-xs text-red-500 font-medium"
+                  data-ocid="admin.error_state"
+                >
+                  {loginError}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full bg-teal text-white hover:opacity-90 font-semibold h-11 mt-2"
+                disabled={loading}
+                data-ocid="admin.submit_button"
+              >
+                {loading ? "Verifying..." : "Unlock"}
+              </Button>
+            </form>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Step 2b: Non-admin — email + password + tabs
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
       <motion.div
@@ -325,11 +430,6 @@ export function LoginPage() {
                 >
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
-                {role === "admin" && (
-                  <p className="text-xs text-center text-muted-foreground">
-                    Admin passphrase required
-                  </p>
-                )}
               </form>
             </TabsContent>
 
