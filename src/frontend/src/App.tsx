@@ -8,14 +8,14 @@ import {
   createRouter,
   useNavigate,
 } from "@tanstack/react-router";
-import Auth from "./pages/Auth";
+import { Auth } from "./pages/Auth";
 import { useEffect } from "react";
 import { AccessDenied } from "./components/AccessDenied";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { SupabaseBanner } from "./components/SupabaseBanner";
 import { ThemeProvider } from "./context/ThemeContext";
-import { AIMatchPage } from "./pages/AIMatchPage";
+import { AIMatch } from "./pages/AIMatch";
 import { AdminRevenuePage } from "./pages/AdminRevenuePage";
 import { AdminVerificationPage } from "./pages/AdminVerificationPage";
 import { CandidateProfilePage } from "./pages/CandidateProfilePage";
@@ -197,7 +197,7 @@ const vendorEarningsRoute = createRoute({
 const aiMatchRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/ai-match",
-  component: AIMatchPage,
+  component: AIMatch,
 });
 
 const dealRoomRoute = createRoute({
