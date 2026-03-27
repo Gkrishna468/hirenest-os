@@ -15,7 +15,7 @@ import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { SupabaseBanner } from "./components/SupabaseBanner";
 import { ThemeProvider } from "./context/ThemeContext";
-
+import { EmergencyCheck } from './components/EmergencyCheck'
 // Page imports
 import { AIMatch } from "./pages/AIMatch";
 import { AdminRevenuePage } from "./pages/AdminRevenuePage";
@@ -86,6 +86,7 @@ function RedirectToLogin() {
 function MainLayout() {
   return (
     <div className="min-h-screen flex flex-col gradient-bg">
+      <EmergencyCheck />
       <SupabaseBanner />
       <Navbar />
       <main className="flex-1">
