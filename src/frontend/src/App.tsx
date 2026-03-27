@@ -72,7 +72,7 @@ function RecruiterGuard({ children }: { children: React.ReactNode }) {
 function RedirectToLogin() {
   const navigate = useNavigate();
   useEffect(() => {
-    navigate({ to: "/login" });
+    navigate({ to: "/auth" });
   }, [navigate]);
   return null;
 }
