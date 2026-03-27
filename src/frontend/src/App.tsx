@@ -8,6 +8,7 @@ import {
   createRouter,
   useNavigate,
 } from "@tanstack/react-router";
+import Auth from "./pages/Auth";
 import { useEffect } from "react";
 import { AccessDenied } from "./components/AccessDenied";
 import { Footer } from "./components/Footer";
@@ -281,6 +282,12 @@ const paymentSuccessRoute = createRoute({
   component: VendorSubscriptionSuccess,
 });
 
+const authPageRoute = createRoute({
+  getParentRoute: () => authLayoutRoute,
+  path: "/auth",
+  component: Auth,
+});
+
 const paymentFailureRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/payment-failure",
@@ -314,8 +321,11 @@ const routeTree = rootRoute.addChildren([
     paymentSuccessRoute,
     paymentFailureRoute,
   ]),
-  authLayoutRoute.addChildren([loginRoute, onboardingRoute]),
-]);
+authLayoutRoute.addChildren([
+  loginRoute,
+  onboardingRoute,
+  authPageRoute, // ✅ ADDED
+]),;
 
 const router = createRouter({ routeTree });
 
