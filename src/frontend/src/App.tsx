@@ -8,13 +8,15 @@ import {
   createRouter,
   useNavigate,
 } from "@tanstack/react-router";
-import { Auth } from "./pages/Auth";
 import { useEffect } from "react";
+import { Auth } from "./pages/Auth";
 import { AccessDenied } from "./components/AccessDenied";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { SupabaseBanner } from "./components/SupabaseBanner";
 import { ThemeProvider } from "./context/ThemeContext";
+
+// Page imports
 import { AIMatch } from "./pages/AIMatch";
 import { AdminRevenuePage } from "./pages/AdminRevenuePage";
 import { AdminVerificationPage } from "./pages/AdminVerificationPage";
@@ -41,6 +43,8 @@ import {
   VendorSubscriptionCancel,
   VendorSubscriptionSuccess,
 } from "./pages/VendorSubscriptionPage";
+
+// ==================== GUARD COMPONENTS ====================
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
   const role = getCurrentRole();
@@ -77,6 +81,8 @@ function RedirectToLogin() {
   return null;
 }
 
+// ==================== LAYOUT COMPONENTS ====================
+
 function MainLayout() {
   return (
     <div className="min-h-screen flex flex-col gradient-bg">
@@ -98,6 +104,8 @@ function AuthLayout() {
   );
 }
 
+// ==================== ROUTE DEFINITIONS ====================
+
 const rootRoute = createRootRoute();
 
 const mainLayoutRoute = createRoute({
@@ -112,6 +120,7 @@ const authLayoutRoute = createRoute({
   component: AuthLayout,
 });
 
+// Public routes (no auth required)
 const indexRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/",
@@ -142,18 +151,26 @@ const candidateProfileRoute = createRoute({
   component: CandidateProfilePage,
 });
 
-const matchHistoryRoute = createRoute({
-  getParentRoute: () => mainLayoutRoute,
-  path: "/match-history",
-  component: MatchHistoryPage,
-});
-
 const vendorDirectoryRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/vendors",
   component: VendorDirectoryPage,
 });
 
+const pricingRoute = createRoute({
+  getParentRoute: () => mainLayoutRoute,
+  path: "/pricing",
+  component: PricingPage,
+});
+
+// ✅ AI MATCH ROUTE - Public access (as per your POC)
+const aiMatchRoute = createRoute({
+  getParentRoute: () => mainLayoutRoute,
+  path: "/ai-match",
+  component: AIMatch,
+});
+
+// Auth routes
 const loginRoute = createRoute({
   getParentRoute: () => authLayoutRoute,
   path: "/login",
@@ -166,6 +183,13 @@ const onboardingRoute = createRoute({
   component: OnboardingPage,
 });
 
+const authPageRoute = createRoute({
+  getParentRoute: () => authLayoutRoute,
+  path: "/auth",
+  component: Auth,
+});
+
+// Protected: Client routes
 const clientDashRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/client/dashboard",
@@ -178,6 +202,7 @@ const clientSpendingRoute = createRoute({
   component: ClientSpendingPage,
 });
 
+// Protected: Vendor routes
 const vendorDashRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/vendor/dashboard",
@@ -194,30 +219,13 @@ const vendorEarningsRoute = createRoute({
   component: VendorEarningsPage,
 });
 
-const aiMatchRoute = createRoute({
-  getParentRoute: () => mainLayoutRoute,
-  path: "/ai-match",
-  component: AIMatch,
-});
-
-const dealRoomRoute = createRoute({
-  getParentRoute: () => mainLayoutRoute,
-  path: "/deal-room",
-  component: DealRoomPage,
-});
-
-const companyDashRoute = createRoute({
-  getParentRoute: () => mainLayoutRoute,
-  path: "/dashboard/company",
-  component: CompanyDashboard,
-});
-
 const oldVendorDashRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/dashboard/vendor",
   component: VendorDashboard,
 });
 
+// Protected: Recruiter routes
 const recruiterWorkflowRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/recruiter/dashboard",
@@ -238,6 +246,25 @@ const recruiterDashRoute = createRoute({
   ),
 });
 
+const matchHistoryRoute = createRoute({
+  getParentRoute: () => mainLayoutRoute,
+  path: "/match-history",
+  component: MatchHistoryPage,
+});
+
+const dealRoomRoute = createRoute({
+  getParentRoute: () => mainLayoutRoute,
+  path: "/deal-room",
+  component: DealRoomPage,
+});
+
+const companyDashRoute = createRoute({
+  getParentRoute: () => mainLayoutRoute,
+  path: "/dashboard/company",
+  component: CompanyDashboard,
+});
+
+// Protected: Admin routes
 const adminVerificationRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/admin/verification",
@@ -258,12 +285,7 @@ const adminRevenueRoute = createRoute({
   ),
 });
 
-const pricingRoute = createRoute({
-  getParentRoute: () => mainLayoutRoute,
-  path: "/pricing",
-  component: PricingPage,
-});
-
+// Subscription/Payment routes
 const subscriptionSuccessRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/subscription/success",
@@ -282,17 +304,13 @@ const paymentSuccessRoute = createRoute({
   component: VendorSubscriptionSuccess,
 });
 
-const authPageRoute = createRoute({
-  getParentRoute: () => authLayoutRoute,
-  path: "/auth",
-  component: Auth,
-});
-
 const paymentFailureRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/payment-failure",
   component: VendorSubscriptionCancel,
 });
+
+// ==================== ROUTE TREE ====================
 
 const routeTree = rootRoute.addChildren([
   mainLayoutRoute.addChildren([
@@ -301,31 +319,34 @@ const routeTree = rootRoute.addChildren([
     requirementDetailRoute,
     talentRoute,
     candidateProfileRoute,
-    matchHistoryRoute,
     vendorDirectoryRoute,
+    pricingRoute,
+    aiMatchRoute,              // ✅ AI Match in main layout
     clientDashRoute,
     clientSpendingRoute,
     vendorDashRoute,
     vendorEarningsRoute,
-    aiMatchRoute,
     dealRoomRoute,
     companyDashRoute,
     oldVendorDashRoute,
     recruiterDashRoute,
     recruiterWorkflowRoute,
+    matchHistoryRoute,
     adminVerificationRoute,
     adminRevenueRoute,
-    pricingRoute,
     subscriptionSuccessRoute,
     subscriptionCancelRoute,
     paymentSuccessRoute,
     paymentFailureRoute,
   ]),
-authLayoutRoute.addChildren([
-  loginRoute,
-  onboardingRoute,
-  authPageRoute, // ✅ ADDED
-]),;
+  authLayoutRoute.addChildren([
+    loginRoute,
+    onboardingRoute,
+    authPageRoute,
+  ]),
+]);
+
+// ==================== ROUTER & APP ====================
 
 const router = createRouter({ routeTree });
 
