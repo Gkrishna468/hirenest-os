@@ -9,7 +9,7 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Auth } from "./pages/Auth";
+import Auth from "./pages/Auth";
 import { AccessDenied } from "./components/AccessDenied";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
