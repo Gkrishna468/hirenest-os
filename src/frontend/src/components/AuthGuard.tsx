@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { useNavigate } from "@tanstack/react-router";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
@@ -12,16 +10,17 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       const { data } = await supabase.auth.getUser();
 
       if (!data.user) {
-        navigate({ to: "/auth" });
-      } else {
-        setUser(data.user);
+        // 🔥 FORCE REDIRECT (reliable)
+        window.location.href = "/auth";
+        return;
       }
 
+      setUser(data.user);
       setLoading(false);
     };
 
     checkUser();
-  }, [navigate]);
+  }, []);
 
   if (loading) {
     return (
@@ -30,8 +29,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-
-  if (!user) return null;
 
   return <>{children}</>;
 }
