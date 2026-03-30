@@ -1,3 +1,4 @@
+import { AuthGuard } from "./components/AuthGuard";
 import { Toaster } from "@/components/ui/sonner";
 import { getCurrentRole } from "@/lib/roleStore";
 import {
@@ -193,30 +194,44 @@ const authPageRoute = createRoute({
 const clientDashRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/client/dashboard",
-  component: ClientDashboard,
+   component: () => (
+    <AuthGuard>
+      <ClientDashboard />
+    </AuthGuard>
+  ),
 });
 
 const clientSpendingRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/client/spending",
-  component: ClientSpendingPage,
+    component: () => (
+    <AuthGuard>
+      <ClientSpendingPage />
+    </AuthGuard>
+  ),
 });
 
 // Protected: Vendor routes
 const vendorDashRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/vendor/dashboard",
-  component: () => (
-    <VendorGuard>
-      <NewVendorDashboard />
-    </VendorGuard>
+ component: () => (
+    <AuthGuard>
+      <VendorGuard>
+        <NewVendorDashboard />
+      </VendorGuard>
+    </AuthGuard>
   ),
 });
 
 const vendorEarningsRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/vendor/earnings",
-  component: VendorEarningsPage,
+    component: () => (
+    <AuthGuard>
+      <VendorEarningsPage />
+    </AuthGuard>
+  ),
 });
 
 const oldVendorDashRoute = createRoute({
@@ -229,39 +244,55 @@ const oldVendorDashRoute = createRoute({
 const recruiterWorkflowRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/recruiter/dashboard",
-  component: () => (
-    <RecruiterGuard>
-      <RecruiterWorkflowPage />
-    </RecruiterGuard>
+   component: () => (
+    <AuthGuard>
+      <RecruiterGuard>
+        <RecruiterWorkflowPage />
+      </RecruiterGuard>
+    </AuthGuard>
   ),
 });
 
 const recruiterDashRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/dashboard/recruiter",
-  component: () => (
-    <RecruiterGuard>
-      <RecruiterDashboard />
-    </RecruiterGuard>
+component: () => (
+    <AuthGuard>
+      <RecruiterGuard>
+        <RecruiterDashboard />
+      </RecruiterGuard>
+    </AuthGuard>
   ),
 });
 
 const matchHistoryRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/match-history",
-  component: MatchHistoryPage,
+   component: () => (
+    <AuthGuard>
+      <MatchHistoryPage />
+    </AuthGuard>
+  ),
 });
 
 const dealRoomRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/deal-room",
-  component: DealRoomPage,
+  component: () => (
+    <AuthGuard>
+      <DealRoomPage />
+    </AuthGuard>
+  ),
 });
 
 const companyDashRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/dashboard/company",
-  component: CompanyDashboard,
+  component: () => (
+    <AuthGuard>
+      <CompanyDashboard />
+    </AuthGuard>
+  ),
 });
 
 // Protected: Admin routes
@@ -269,9 +300,11 @@ const adminVerificationRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/admin/verification",
   component: () => (
-    <AdminGuard>
-      <AdminVerificationPage />
-    </AdminGuard>
+    <AuthGuard>
+      <AdminGuard>
+        <AdminVerificationPage />
+      </AdminGuard>
+    </AuthGuard>
   ),
 });
 
@@ -279,9 +312,11 @@ const adminRevenueRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
   path: "/admin/revenue",
   component: () => (
-    <AdminGuard>
-      <AdminRevenuePage />
-    </AdminGuard>
+    <AuthGuard>
+      <AdminGuard>
+        <AdminRevenuePage />
+      </AdminGuard>
+    </AuthGuard>
   ),
 });
 
