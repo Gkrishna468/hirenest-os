@@ -8,7 +8,7 @@ import {
   createRouter,
   useNavigate,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import Auth from "./pages/Auth";
 import { AccessDenied } from "./components/AccessDenied";
 import { Footer } from "./components/Footer";
