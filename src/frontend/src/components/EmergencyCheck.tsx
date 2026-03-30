@@ -1,3 +1,4 @@
+import {useEffect} from "react",
 export function EmergencyCheck() {
   useEffect(() => {
     console.log('✅ REACT IS RUNNING')
