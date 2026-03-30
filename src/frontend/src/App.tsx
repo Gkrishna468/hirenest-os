@@ -45,43 +45,6 @@ import {
   VendorSubscriptionSuccess,
 } from "./pages/VendorSubscriptionPage";
 
-// ==================== GUARD COMPONENTS ====================
-
-function AdminGuard({ children }: { children: React.ReactNode }) {
-  const role = getCurrentRole();
-  // If a non-admin role is set, show Access Denied
-  if (role !== null && role !== "admin") {
-    return <AccessDenied />;
-  }
-  // If null (not logged in) or admin, render the page (which has its own AdminLockScreen)
-  return <>{children}</>;
-}
-
-function VendorGuard({ children }: { children: React.ReactNode }) {
-  const role = getCurrentRole();
-  if (!role || role !== "vendor") {
-    // Redirect to login — use a component that triggers navigation
-    return <RedirectToLogin />;
-  }
-  return <>{children}</>;
-}
-
-function RecruiterGuard({ children }: { children: React.ReactNode }) {
-  const role = getCurrentRole();
-  if (!role || role !== "recruiter") {
-    return <RedirectToLogin />;
-  }
-  return <>{children}</>;
-}
-
-function RedirectToLogin() {
-  const navigate = useNavigate();
-  useEffect(() => {
-    navigate({ to: "/auth" });
-  }, [navigate]);
-  return null;
-}
-
 // ==================== LAYOUT COMPONENTS ====================
 
 function MainLayout() {
