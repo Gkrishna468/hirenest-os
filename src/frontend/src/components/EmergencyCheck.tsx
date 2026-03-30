@@ -10,8 +10,14 @@ export function EmergencyCheck() {
     const div = document.createElement('div')
     div.style.cssText = 'position:fixed;top:0;left:0;background:red;color:white;padding:10px;z-index:9999;font-size:12px'
     div.innerHTML = '🔴 REACT MOUNTED'
-    document.body.appendChild(div)
-  }, [])
+    document.body.appendChild(div);
+    return () =>{
+      const existing = document.getElementById("emergeny-check-banner");
+      if (existing) {
+         document.body.removeChild(existing);
+      }
+    };
+  }, []);
   
-  return null
+  return null;
 }
