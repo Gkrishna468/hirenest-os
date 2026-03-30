@@ -29,7 +29,7 @@ import {
   Users,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export function ClientDashboard() {
   const navigate = useNavigate();
