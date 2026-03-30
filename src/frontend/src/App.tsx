@@ -86,7 +86,6 @@ function RedirectToLogin() {
 function MainLayout() {
   return (
     <div className="min-h-screen flex flex-col gradient-bg">
-     // <EmergencyCheck />
       <SupabaseBanner />
       <Navbar />
       <main className="flex-1">
