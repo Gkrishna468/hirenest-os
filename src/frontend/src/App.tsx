@@ -46,7 +46,19 @@ import {
 } from "./pages/VendorSubscriptionPage";
 
 // ==================== LAYOUT COMPONENTS ====================
+function AdminGuard({ children }: { children: React.ReactNode }) {
+  const role = localStorage.getItem("role");
 
+  if (role !== "admin") {
+    return (
+      <div style={{ padding: "20px", textAlign: "center" }}>
+        ❌ Access Denied
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
 function MainLayout() {
   return (
     <div className="min-h-screen flex flex-col gradient-bg">
