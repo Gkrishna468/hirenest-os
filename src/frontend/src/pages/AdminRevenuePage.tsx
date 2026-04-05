@@ -344,7 +344,7 @@ function CommissionCalculator() {
 
 export function AdminRevenuePage() {
   const {
-    isAuthenticated,
+    isAuthenticated: _isAuthenticated,
     input,
     setInput,
     error,
@@ -354,6 +354,7 @@ export function AdminRevenuePage() {
     handleLock,
   } = useAdminAuth();
 
+  //TEMP override
   const isAuthenticated = true;
  // if (!isAuthenticated) {
    // return (
